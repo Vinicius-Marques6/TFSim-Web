@@ -25,7 +25,7 @@ export function RegisterFileView() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="bg-muted sticky top-0">Registrador</TableHead>
+            <TableHead className="bg-muted sticky top-0">Reg</TableHead>
             <TableHead className="bg-muted sticky top-0">Qi</TableHead>
             <TableHead className="bg-muted sticky top-0">Valor</TableHead>
           </TableRow>

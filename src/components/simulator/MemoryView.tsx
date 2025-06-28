@@ -28,7 +28,7 @@ const MemoryCell = memo(({ address }: MemoryCellProps) => {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <TableCell className="w-16 text-center">{value}</TableCell>
+        <TableCell className="w-16 text-center border-b">{value}</TableCell>
       </TooltipTrigger>
       <TooltipContent>
         <p>Endereço: {address}</p>
@@ -41,14 +41,14 @@ MemoryCell.displayName = "MemoryCell";
 export function MemoryView() {
   return (
     <div className="bg-white border rounded-sm shadow col-span-5 overflow-auto">
-      <Table>
+      <Table className="border-separate border-spacing-0">
         <TableHeader className="bg-muted">
           <TableRow>
-            <TableHead className="w-20 text-center font-bold sticky left-0">
+            <TableHead className="w-20 bg-muted text-center font-bold sticky left-0 border-r border-b">
               Endereço
             </TableHead>
             {Array.from({ length: NUM_COLS }, (_, i) => (
-              <TableHead key={i} className="w-16 text-center font-bold">
+              <TableHead key={i} className="w-16 text-center font-bold border-b">
                 {i}
               </TableHead>
             ))}
@@ -57,7 +57,7 @@ export function MemoryView() {
         <TableBody>
           {Array.from({ length: NUM_ROWS }, (_, rowIndex) => (
             <TableRow key={rowIndex}>
-              <TableCell className="w-20 text-center font-bold sticky left-0 bg-muted">
+              <TableCell className="w-20 text-center font-bold sticky left-0 bg-muted border-r border-b">
                 {rowIndex * NUM_COLS}
               </TableCell>
               {Array.from({ length: NUM_COLS }, (_, colIndex) => {

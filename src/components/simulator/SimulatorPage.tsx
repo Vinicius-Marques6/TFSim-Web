@@ -40,7 +40,7 @@ export function SimulatorPage() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="rounded-none border-b border-none px-2 lg:px-4 flex bg-white border shadow-sm p-1 gap-1">
+      <div className="rounded-none border-b border-none px-2 lg:px-4 flex w-full z-10 bg-white border shadow-sm p-1 gap-1">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="ghost" size="icon" className="cursor-pointer" onClick={handleLoadProgram}>
@@ -67,9 +67,9 @@ export function SimulatorPage() {
           </span>
         </div>
       </div>
-      <div className="flex-1 p-1 overflow-hidden">
-        <div className="grid grid-cols-6 grid-rows-2 h-full gap-1">
-          <div className="col-span-1">
+      <div className="flex-1 p-1 sm:overflow-hidden">
+        <div className="flex flex-col sm:grid sm:grid-cols-6 grid-rows-2 h-full gap-1">
+          <div className="col-span-1 h-100 sm:h-full">
             <Editor />
           </div>
           <InstructionStatusView />
