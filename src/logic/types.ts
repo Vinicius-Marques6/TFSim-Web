@@ -13,6 +13,7 @@ export const Opcode = {
 
 // Representa uma única instrução de assembly
 export interface Instruction {
+  id: string;        // Identificador único da instrução
   op: Opcode;
   dest: string;       // Registrador de destino (Rd) ou registrador fonte para SW (Rt)
   operand1: string;   // Registrador fonte (Rs) ou offset para LW/SW
@@ -55,6 +56,8 @@ export interface ReservationStationEntry {
 
   // Endereço de memória calculado para LW/SW
   address: number | null;
+
+  instructionId: string | null; // ID da instrução associada
 }
 
 // Representa o estado completo do simulador

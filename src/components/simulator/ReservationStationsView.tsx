@@ -6,13 +6,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { type ReservationStationEntry } from "@/logic/types";
+import { useSimulatorStore } from "@/store/simulatorStore";
 
-interface Props {
-  stations: ReservationStationEntry[] | undefined;
-}
 
-export function ReservationStationsView({ stations }: Props) {
+export function ReservationStationsView() {
+  const stations = useSimulatorStore((state) => state.reservationStations);
+
   return (
     <div className="bg-white col-span-2 rounded-sm shadow-sm border overflow-auto">
       <Table>

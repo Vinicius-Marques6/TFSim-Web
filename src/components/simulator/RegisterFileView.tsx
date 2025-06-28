@@ -7,12 +7,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { type RegisterState } from "@/logic/types";
+import { useSimulatorStore } from "@/store/simulatorStore";
 
-interface Props {
-  registers?: Record<string, RegisterState>;
-}
+export function RegisterFileView() {
+  const registers = useSimulatorStore((state) => state.registerFile);
 
-export function RegisterFileView({ registers }: Props) {
   const registerEntries = Array.from({ length: 32 }, (_, i) => {
     const name = `R${i}`;
     return [name, registers?.[name] ?? { qi: "", value: 0 }] as [

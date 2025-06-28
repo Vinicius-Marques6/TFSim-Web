@@ -21,14 +21,14 @@ export function parseInstruction(line: string): Instruction | null {
       case Opcode.MUL:
       case Opcode.DIV:
         if (parts.length !== 4) return null;
-        return { op, dest: parts[1], operand1: parts[2], operand2: parts[3] };
+        return { id: crypto.randomUUID(), op, dest: parts[1], operand1: parts[2], operand2: parts[3] };
       case Opcode.LW:
         if (parts.length !== 4) return null;
-        return { op, dest: parts[1], operand1: parts[2], operand2: parts[3] };
+        return { id: crypto.randomUUID(), op, dest: parts[1], operand1: parts[2], operand2: parts[3] };
       case Opcode.SW:
         if (parts.length !== 4) return null;
         // Para SW, a fonte é `dest` e a base é `operand2`
-        return { op, dest: parts[1], operand1: parts[2], operand2: parts[3] };
+        return { id: crypto.randomUUID(), op, dest: parts[1], operand1: parts[2], operand2: parts[3] };
       default:
         return null;
     }

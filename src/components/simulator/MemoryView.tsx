@@ -11,16 +11,34 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-interface Props {
-  memory: Record<string, number> | undefined;
-}
+import { useSimulatorStore } from "@/store/simulatorStore";
+import { memo } from "react";
 
 const TOTAL_ADDRESSES = 500;
 const NUM_COLS = 50;
 const NUM_ROWS = TOTAL_ADDRESSES / NUM_COLS;
 
-export function MemoryView({ memory }: Props) {
+interface MemoryCellProps {
+  address: number;
+}
+
+const MemoryCell = memo(({ address }: MemoryCellProps) => {
+  const value = useSimulatorStore((state) => state.memory[address] ?? 0);
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <TableCell className="w-16 text-center">{value}</TableCell>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>Endereço: {address}</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+});
+MemoryCell.displayName = "MemoryCell";
+
+export function MemoryView() {
   return (
     <div className="bg-white border rounded-sm shadow col-span-5 overflow-auto">
       <Table>
@@ -44,19 +62,7 @@ export function MemoryView({ memory }: Props) {
               </TableCell>
               {Array.from({ length: NUM_COLS }, (_, colIndex) => {
                 const address = rowIndex * NUM_COLS + colIndex;
-                const value = memory?.[address] ?? 0;
-                return (
-                  <Tooltip key={colIndex}>
-                    <TooltipTrigger asChild>
-                      <TableCell className={`w-16 text-center ${value}`}>
-                        {value}
-                      </TableCell>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Endereço: {address}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                );
+                return <MemoryCell key={address} address={address} />;
               })}
             </TableRow>
           ))}

@@ -6,13 +6,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { type InstructionStatus } from "@/logic/types";
+import { useSimulatorStore } from "@/store/simulatorStore";
 
-interface Props {
-  instructionStatus: InstructionStatus[];
-}
 
-export function InstructionStatusView({ instructionStatus }: Props) {
+
+export function InstructionStatusView() {
+  const instructionStatus = useSimulatorStore(
+    (state) => state.instructionStatus
+  );
+
   return (
     <div className="bg-white col-span-2 rounded-sm shadow-sm border overflow-auto">
       <Table>
@@ -30,9 +32,7 @@ export function InstructionStatusView({ instructionStatus }: Props) {
               <TableCell>{`${status.instruction.op} ${status.instruction.dest}, ${status.instruction.operand1}, ${status.instruction.operand2}`}</TableCell>
               <TableCell>{status.issue}</TableCell>
               <TableCell>
-                {status.executionStart && status.executionEnd
-                  ? `${status.executionStart} - ${status.executionEnd}`
-                  : ""}
+                {`${status.executionStart ? status.executionStart: ''} - ${status.executionEnd ? status.executionEnd : ''}`}
               </TableCell>
               <TableCell>{status.writeResult}</TableCell>
             </TableRow>
