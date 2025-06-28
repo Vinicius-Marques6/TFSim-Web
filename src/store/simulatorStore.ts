@@ -27,6 +27,8 @@ const RESERVATION_STATIONS_CONFIG: {
   { name: "Load", type: [Opcode.LW, Opcode.SW], count: 2 },
 ];
 
+const REGISTER_COUNT = 32;
+
 interface SimulatorStoreState extends SimulationState {
   instructionStatus: InstructionStatus[];
   actions: {
@@ -46,7 +48,7 @@ const initializeState = (
 ): SimulationState => {
   // Cria 32 registradores (R0 a R31), inicializando com 0
   const registerFile: Record<string, { value: number; qi: string | null }> = {};
-  for (let i = 0; i < 32; i++) {
+  for (let i = 0; i < REGISTER_COUNT; i++) {
     const regName = `R${i}`;
     registerFile[regName] = { value: 0, qi: null };
   }
@@ -115,6 +117,15 @@ export const useSimulatorStore = create<SimulatorStoreState>((set) => ({
   },
 }));
 
+/**
+ * Fase de Emissão (Issue)
+ * - Pega a próxima instrução da fila.
+ * - Encontra uma Estação de Reserva (ER) vaga do tipo correto.
+ * - Se não houver ER vaga, para (hazard estrutural).
+ * - Copia os operandos para a ER. Se um operando não estiver pronto,
+ *   rastreia a ER que o produzirá (renomeação de registradores).
+ * - Atualiza o arquivo de registradores para apontar para a nova ER.
+ */
 function issuePhase(state: SimulatorStoreState) {
   if (state.instructions.length === 0) return;
 
@@ -227,6 +238,14 @@ function issuePhase(state: SimulatorStoreState) {
   }
 }
 
+/**
+ * Fase de Execução (Execute)
+ * - Itera sobre as ERs ocupadas.
+ * - Se uma ER tem todos os operandos (Vj, Vk prontos), inicia a execução.
+ * - Para LW/SW, primeiro calcula o endereço de memória.
+ * - Para outras operações, começa a contagem de tempo de execução.
+ * - Se uma ER já está em execução, decrementa seu contador de tempo.
+ */
 function executePhase(state: SimulatorStoreState) {
   for (const station of state.reservationStations) {
     if (!station.busy || station.qj !== null || station.qk !== null) continue;
@@ -275,6 +294,14 @@ function executePhase(state: SimulatorStoreState) {
   }
 }
 
+/**
+ * Fase de Escrita de Resultado (Write Result)
+ * - Encontra ERs que terminaram a execução (tempo = 0).
+ * - Simula o CDB: apenas uma ER pode escrever por ciclo.
+ * - Calcula o resultado. LW/SW acessam a memória.
+ * - Transmite o resultado para o arquivo de registradores e outras ERs.
+ * - Libera a ER que escreveu o resultado.
+ */
 function writeResultPhase(state: SimulatorStoreState) {
   const stationToWrite = state.reservationStations.find(
     (s) => s.busy && s.executionTimeLeft === 0
@@ -346,7 +373,6 @@ function writeResultPhase(state: SimulatorStoreState) {
   stationToWrite.address = null;
   stationToWrite.dest = null;
   stationToWrite.executionTimeLeft = null;
-  stationToWrite.address = null;
 
   const instruction = state.instructionStatus.find(
     (s) => s.executionEnd !== null && s.writeResult === null
