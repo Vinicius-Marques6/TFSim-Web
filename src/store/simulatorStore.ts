@@ -15,6 +15,7 @@ const EXECUTION_TIMES: Record<Opcode, number> = {
   [Opcode.SUB]: 2,
   [Opcode.MUL]: 8,
   [Opcode.DIV]: 8,
+  [Opcode.ADDI]: 1,
 };
 
 const RESERVATION_STATIONS_CONFIG: {
@@ -25,6 +26,7 @@ const RESERVATION_STATIONS_CONFIG: {
   { name: "Add", type: [Opcode.ADD, Opcode.SUB], count: 3 },
   { name: "Mul", type: [Opcode.MUL, Opcode.DIV], count: 2 },
   { name: "Load", type: [Opcode.LW, Opcode.SW], count: 2 },
+  { name: "Imm", type: [Opcode.ADDI], count: 2 },
 ];
 
 const REGISTER_COUNT = 32;
@@ -225,6 +227,27 @@ function issuePhase(state: SimulatorStoreState) {
       }
       break;
     }
+    case Opcode.ADDI: {
+      // Formato: ADDI Rd, Rs, immediate
+      // operand1 = Rs, operand2 = immediate
+      const regSource = state.registerFile[instruction.operand1];
+      if (regSource && regSource.qi) {
+        station.qj = regSource.qi;
+      } else {
+        station.vj = regSource ? regSource.value : 0;
+        station.qj = null;
+      }
+
+      station.vk = parseInt(instruction.operand2, 10);
+      station.qk = null;
+
+      // Atualiza o registrador de destino
+      if (state.registerFile[instruction.dest]) {
+        state.registerFile[instruction.dest].qi = station.name;
+      }
+      station.dest = instruction.dest;
+      break;
+    }
   }
 
   // Remove a instrução da fila de emissão
@@ -271,7 +294,8 @@ function executePhase(state: SimulatorStoreState) {
         case Opcode.ADD:
         case Opcode.SUB:
         case Opcode.MUL:
-        case Opcode.DIV: {
+        case Opcode.DIV:
+        case Opcode.ADDI: {
           station.executionTimeLeft = EXECUTION_TIMES[station.op];
           break;
         }
@@ -312,6 +336,8 @@ function writeResultPhase(state: SimulatorStoreState) {
   let result: number | null = null;
   switch (stationToWrite.op) {
     case Opcode.ADD:
+    case Opcode.ADDI:
+      // Para ADDI, o Vk é um valor imediato, não um registrador
       result = (stationToWrite.vj ?? 0) + (stationToWrite.vk ?? 0);
       break;
     case Opcode.SUB:

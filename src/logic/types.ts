@@ -1,6 +1,6 @@
 
 // Tipos de operações que o processador pode executar
-export type Opcode = 'LW' | 'SW' | 'ADD' | 'SUB' | 'MUL' | 'DIV';
+export type Opcode = 'LW' | 'SW' | 'ADD' | 'SUB' | 'MUL' | 'DIV' | 'ADDI';
 
 export const Opcode = {
   LW: 'LW',
@@ -9,6 +9,7 @@ export const Opcode = {
   SUB: 'SUB',
   MUL: 'MUL',
   DIV: 'DIV',
+  ADDI: 'ADDI',
 } as const;
 
 // Representa uma única instrução de assembly

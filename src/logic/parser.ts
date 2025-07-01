@@ -8,6 +8,7 @@ import { type Instruction, Opcode } from "@/logic/types";
  * - DIV Rd, Rs, Rt
  * - LW Rd, offset(Rs)
  * - SW Rt, offset(Rs)
+ * - ADDI Rd, Rs, immediate
  */
 export function parseInstruction(line: string): Instruction | null {
   const parts = line.trim().split(/[\s,()]+/).filter(Boolean);
@@ -20,6 +21,7 @@ export function parseInstruction(line: string): Instruction | null {
       case Opcode.SUB:
       case Opcode.MUL:
       case Opcode.DIV:
+      case Opcode.ADDI:
         if (parts.length !== 4) return null;
         return { id: crypto.randomUUID(), op, dest: parts[1], operand1: parts[2], operand2: parts[3] };
       case Opcode.LW:
