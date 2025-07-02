@@ -1,4 +1,3 @@
-
 // Tipos de operações que o processador pode executar
 export type Opcode = 'LW' | 'SW' | 'ADD' | 'SUB' | 'MUL' | 'DIV' | 'ADDI';
 
@@ -59,6 +58,30 @@ export interface ReservationStationEntry {
   address: number | null;
 
   instructionId: string | null; // ID da instrução associada
+}
+
+// Configuração de tempos de execução customizáveis
+export interface ExecutionTimeConfig {
+  [Opcode.LW]: number;
+  [Opcode.SW]: number;
+  [Opcode.ADD]: number;
+  [Opcode.SUB]: number;
+  [Opcode.MUL]: number;
+  [Opcode.DIV]: number;
+  [Opcode.ADDI]: number;
+}
+
+// Configuração de estações de reserva customizável
+export interface ReservationStationConfig {
+  name: string;
+  type: Opcode[];
+  count: number;
+}
+
+// Configuração completa do simulador
+export interface SimulatorConfig {
+  executionTimes: ExecutionTimeConfig;
+  reservationStations: ReservationStationConfig[];
 }
 
 // Representa o estado completo do simulador

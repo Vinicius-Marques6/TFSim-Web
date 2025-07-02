@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useState } from "react";
 
 import { parseProgram } from "@/logic/parser";
 import { useEditorStore } from "@/store/editorStore";
@@ -11,6 +12,7 @@ import { RegisterFileView } from "./RegisterFileView";
 import { MemoryView } from "./MemoryView";
 import { InstructionStatusView } from "./InstructionStatusView";
 import { Editor } from "./Editor";
+import { ConfigView } from "./ConfigView";
 
 import { Hammer, StepForward } from "lucide-react";
 
@@ -18,6 +20,8 @@ export function SimulatorPage() {
   const { initialize, nextStep } = useSimulatorStore((state) => state.actions);
   const clock = useSimulatorStore((state) => state.clock);
   const hasStarted = useSimulatorStore((state) => state.reservationStations.length > 0);
+
+  const [configOpen, setConfigOpen] = useState(false);
 
   const handleLoadProgram = () => {
     const code = useEditorStore.getState().code;
@@ -88,6 +92,10 @@ export function SimulatorPage() {
             <DropdownMenuItem onClick={handleSaveFile}>
               Salvar arquivo
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setConfigOpen(true)}>
+              Configurações
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <Tooltip>
@@ -110,8 +118,8 @@ export function SimulatorPage() {
             <p>Próximo ciclo</p>
           </TooltipContent>
         </Tooltip>
-        <div className="ml-auto flex items-center">
-          <span className="text-sm font-medium">
+        <div className="flex items-center">
+          <span className="text-sm font-medium text-muted-foreground">
             Clock: {clock}
           </span>
         </div>
@@ -127,6 +135,9 @@ export function SimulatorPage() {
           <MemoryView />
         </div>
       </div>
+
+
+      <ConfigView open={configOpen} setOpen={setConfigOpen} />
     </div>
   );
 }

@@ -1,14 +1,17 @@
 import { create } from "zustand";
 import type {
+  ExecutionTimeConfig,
   Instruction,
   InstructionStatus,
+  ReservationStationConfig,
   ReservationStationEntry,
   SimulationState,
-} from "../logic/types";
-import { Opcode } from "../logic/types";
+  SimulatorConfig,
+} from "@/logic/types";
+import { Opcode } from "@/logic/types";
 import { produce } from "immer";
 
-const EXECUTION_TIMES: Record<Opcode, number> = {
+const DEFAULT_EXECUTION_TIMES: ExecutionTimeConfig = {
   [Opcode.LW]: 2,
   [Opcode.SW]: 1,
   [Opcode.ADD]: 2,
@@ -18,11 +21,7 @@ const EXECUTION_TIMES: Record<Opcode, number> = {
   [Opcode.ADDI]: 1,
 };
 
-const RESERVATION_STATIONS_CONFIG: {
-  name: string;
-  type: Opcode[];
-  count: number;
-}[] = [
+const DEFAULT_RESERVATION_STATIONS_CONFIG: ReservationStationConfig[] = [
   { name: "Add", type: [Opcode.ADD, Opcode.SUB], count: 3 },
   { name: "Mul", type: [Opcode.MUL, Opcode.DIV], count: 2 },
   { name: "Load", type: [Opcode.LW, Opcode.SW], count: 2 },
@@ -33,12 +32,15 @@ const REGISTER_COUNT = 32;
 
 interface SimulatorStoreState extends SimulationState {
   instructionStatus: InstructionStatus[];
+  config: SimulatorConfig;
   actions: {
     initialize: (
       instructions: Instruction[],
       registers: Record<string, number>,
-      memory: Record<string, number>
+      memory: Record<string, number>,
+      config?: Partial<SimulatorConfig>
     ) => void;
+    updateConfig: (config: Partial<SimulatorConfig>) => void;
     nextStep: () => void;
   };
 }
@@ -46,9 +48,10 @@ interface SimulatorStoreState extends SimulationState {
 const initializeState = (
   instructions: Instruction[],
   registersNames: Record<string, number>,
-  memory: Record<string, number>
+  memory: Record<string, number>,
+  config: SimulatorConfig
 ): SimulationState => {
-  // Cria 32 registradores (R0 a R31), inicializando com 0
+  // Cria registradores (R0 a R31 por padrão), inicializando com 0
   const registerFile: Record<string, { value: number; qi: string | null }> = {};
   for (let i = 0; i < REGISTER_COUNT; i++) {
     const regName = `R${i}`;
@@ -62,10 +65,10 @@ const initializeState = (
   });
 
   const reservationStations: ReservationStationEntry[] = [];
-  RESERVATION_STATIONS_CONFIG.forEach((config) => {
-    for (let i = 1; i <= config.count; i++) {
+  config.reservationStations.forEach((configStation) => {
+    for (let i = 1; i <= configStation.count; i++) {
       reservationStations.push({
-        name: `${config.name}${i}`,
+        name: `${configStation.name}${i}`,
         busy: false,
         op: null,
         vj: null,
@@ -83,7 +86,7 @@ const initializeState = (
   return { clock: 0, instructions, reservationStations, registerFile, memory };
 };
 
-export const useSimulatorStore = create<SimulatorStoreState>((set) => ({
+export const useSimulatorStore = create<SimulatorStoreState>((set, get) => ({
   // Estado Inicial
   clock: 0,
   instructions: [],
@@ -91,12 +94,16 @@ export const useSimulatorStore = create<SimulatorStoreState>((set) => ({
   registerFile: {},
   memory: {},
   instructionStatus: [],
+  config: {
+    executionTimes: DEFAULT_EXECUTION_TIMES,
+    reservationStations: DEFAULT_RESERVATION_STATIONS_CONFIG
+  },
 
   // Ações que modificam o estado
   actions: {
-    initialize: (instructions, registers, memory) =>
+    initialize: (instructions, registers, memory) => {
       set({
-        ...initializeState(instructions, registers, memory),
+        ...initializeState(instructions, registers, memory, get().config),
         instructionStatus: instructions.map((instruction) => ({
           instruction,
           issue: null,
@@ -104,7 +111,18 @@ export const useSimulatorStore = create<SimulatorStoreState>((set) => ({
           executionEnd: null,
           writeResult: null,
         })),
-      }),
+      });
+    },
+
+    updateConfig: (configOverrides) => {
+      const currentState = get();
+      const newConfig = {
+        executionTimes: { ...currentState.config.executionTimes, ...configOverrides.executionTimes },
+        reservationStations: configOverrides.reservationStations || currentState.config.reservationStations,
+      };
+      
+      set({ config: newConfig });
+    },
 
     nextStep: () =>
       set(
@@ -132,7 +150,7 @@ function issuePhase(state: SimulatorStoreState) {
   if (state.instructions.length === 0) return;
 
   const instruction = state.instructions[0];
-  const stationTypeConfig = RESERVATION_STATIONS_CONFIG.find((c) =>
+  const stationTypeConfig = state.config.reservationStations.find((c) =>
     c.type.includes(instruction.op)
   );
   if (!stationTypeConfig) return;
@@ -288,7 +306,7 @@ function executePhase(state: SimulatorStoreState) {
           // Para LW/SW, o primeiro passo é calcular o endereço
           // Assumimos que o cálculo do endereço leva 1 ciclo.
           station.address = (station.vj ?? 0) + (station.address ?? 0);
-          station.executionTimeLeft = EXECUTION_TIMES[station.op];
+          station.executionTimeLeft = state.config.executionTimes[station.op];
           break;
         }
         case Opcode.ADD:
@@ -296,7 +314,7 @@ function executePhase(state: SimulatorStoreState) {
         case Opcode.MUL:
         case Opcode.DIV:
         case Opcode.ADDI: {
-          station.executionTimeLeft = EXECUTION_TIMES[station.op];
+          station.executionTimeLeft = state.config.executionTimes[station.op];
           break;
         }
       }
