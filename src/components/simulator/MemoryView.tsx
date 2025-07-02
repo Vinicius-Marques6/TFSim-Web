@@ -20,15 +20,20 @@ const NUM_ROWS = TOTAL_ADDRESSES / NUM_COLS;
 
 interface MemoryCellProps {
   address: number;
+  highlight: boolean;
 }
 
-const MemoryCell = memo(({ address }: MemoryCellProps) => {
+const MemoryCell = memo(({ address, highlight }: MemoryCellProps) => {
   const value = useSimulatorStore((state) => state.memory[address] ?? 0);
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <TableCell className="w-16 text-center border-b">{value}</TableCell>
+        <TableCell
+          className={`w-16 text-center border-b ${highlight ? 'bg-yellow-200 animate-pulse' : ''}`}
+        >
+          {value}
+        </TableCell>
       </TooltipTrigger>
       <TooltipContent>
         <p>Endereço: {address}</p>
@@ -39,6 +44,9 @@ const MemoryCell = memo(({ address }: MemoryCellProps) => {
 MemoryCell.displayName = "MemoryCell";
 
 export function MemoryView() {
+  const lastMemoryWrite = useSimulatorStore((state) => state.lastMemoryWrite);
+  const clock = useSimulatorStore((state) => state.clock);
+
   return (
     <div className="bg-white border rounded-sm shadow col-span-5 overflow-auto">
       <Table className="border-separate border-spacing-0">
@@ -57,12 +65,13 @@ export function MemoryView() {
         <TableBody>
           {Array.from({ length: NUM_ROWS }, (_, rowIndex) => (
             <TableRow key={rowIndex}>
-              <TableCell className="w-20 text-center font-bold sticky left-0 bg-muted border-r border-b">
+              <TableCell className="w-20 text-center font-bold sticky left-0 bg-muted z-1 border-r border-b">
                 {rowIndex * NUM_COLS}
               </TableCell>
               {Array.from({ length: NUM_COLS }, (_, colIndex) => {
                 const address = rowIndex * NUM_COLS + colIndex;
-                return <MemoryCell key={address} address={address} />;
+                const highlight = !!lastMemoryWrite && lastMemoryWrite.address === address && lastMemoryWrite.clock === clock;
+                return <MemoryCell key={address} address={address} highlight={highlight} />;
               })}
             </TableRow>
           ))}

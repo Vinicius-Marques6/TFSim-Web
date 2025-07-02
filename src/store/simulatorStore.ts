@@ -33,6 +33,7 @@ const REGISTER_COUNT = 32;
 interface SimulatorStoreState extends SimulationState {
   instructionStatus: InstructionStatus[];
   config: SimulatorConfig;
+  lastMemoryWrite: { address: number; clock: number } | null;
   actions: {
     initialize: (
       instructions: Instruction[],
@@ -98,6 +99,7 @@ export const useSimulatorStore = create<SimulatorStoreState>((set, get) => ({
     executionTimes: DEFAULT_EXECUTION_TIMES,
     reservationStations: DEFAULT_RESERVATION_STATIONS_CONFIG
   },
+  lastMemoryWrite: null,
 
   // Ações que modificam o estado
   actions: {
@@ -352,6 +354,7 @@ function writeResultPhase(state: SimulatorStoreState) {
   if (!stationToWrite) return;
 
   let result: number | null = null;
+  let memoryWriteAddress: number | null = null;
   switch (stationToWrite.op) {
     case Opcode.ADD:
     case Opcode.ADDI:
@@ -377,6 +380,7 @@ function writeResultPhase(state: SimulatorStoreState) {
       if (stationToWrite.address !== null) {
         // Para SW, o valor a ser armazenado foi colocado em Vk durante a emissão
         state.memory[stationToWrite.address] = stationToWrite.vk ?? 0;
+        memoryWriteAddress = stationToWrite.address;
       }
       break;
   }
@@ -405,6 +409,11 @@ function writeResultPhase(state: SimulatorStoreState) {
         station.qk = null;
       }
     }
+  }
+
+  // Após a escrita, se foi SW, registra o endereço e clock
+  if (memoryWriteAddress !== null) {
+    state.lastMemoryWrite = { address: memoryWriteAddress, clock: state.clock + 1 };
   }
 
   // Libera a estação de reserva
